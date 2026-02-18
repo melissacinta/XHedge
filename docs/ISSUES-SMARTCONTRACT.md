@@ -4,76 +4,162 @@ This document tracks the detailed development tasks for the Soroban smart contra
 
 ---
 
-## 🏛️ Core Vault Architecture
+## 🏛️ Module 1: Vault Core Infrastructure (Issues SC-1 to SC-8)
 
-### Issue #SC-1: Vault State & Config
+### Issue #SC-1: Contract Setup & Error Constants
 **Priority:** Critical
-**Status:** ❌ PENDING
-**Description:** Initialize the vault contract structure and define storage for assets and shares.
+**Labels:** `smart-contract`, `good-first-issue`
+**Description:** Initialize the Soroban project and define standard error codes.
 - **Tasks:**
-  - [ ] Initialize `volatility_shield` project.
-  - [ ] Define `DataKey` enum: `TotalAssets`, `TotalShares`, `Admin`, `Strategies`.
-  - [ ] Implement `init(env, asset: Address, admin: Address)` function.
-  - [ ] Store the underlying asset address (e.g., USDC).
+  - [ ] Initialize `volatility_shield` project structure.
+  - [ ] Define `Error` enum: `NotInitialized`, `AlreadyInitialized`, `NegativeAmount`.
+  - [ ] Configure `Cargo.toml` with `soroban-sdk` dependencies.
 
-### Issue #SC-2: Share Logic (ERC-4626 Style)
+### Issue #SC-2: Storage Key Definitions
 **Priority:** Critical
-**Status:** ❌ PENDING
-**Description:** Implement the math for minting/burning shares based on vault value.
+**Labels:** `smart-contract`, `config`
+**Description:** Define the storage keys used for contract state persistence.
 - **Tasks:**
-  - [ ] Implement `convert_to_shares(assets: i128) -> i128`.
-    - Logic: `assets * total_shares / total_assets`.
+  - [ ] Define `DataKey` enum: `TotalAssets`, `TotalShares`, `Admin`.
+  - [ ] Implement `has_admin` helper function.
+  - [ ] Implement `read_admin` helper function.
+
+### Issue #SC-3: Vault Initialization Logic
+**Priority:** High
+**Labels:** `smart-contract`, `core`
+**Description:** Implement the constructor-like init function.
+- **Tasks:**
+  - [ ] Implement `init(env, asset: Address, admin: Address)`.
+  - [ ] Assert not already initialized.
+  - [ ] Store asset principal and initial state.
+
+### Issue #SC-4: Share Calculation Math (Mint)
+**Priority:** Critical
+**Labels:** `smart-contract`, `math`
+**Description:** Implement ERC-4626 style conversion for deposits.
+- **Tasks:**
+  - [ ] Implement `convert_to_shares(amount: i128) -> i128`.
+  - [ ] Handle division by zero (initial deposit case).
+  - [ ] Write unit test for precision loss.
+
+### Issue #SC-5: Share Calculation Math (Burn)
+**Priority:** Critical
+**Labels:** `smart-contract`, `math`
+**Description:** Implement ERC-4626 style conversion for withdrawals.
+- **Tasks:**
   - [ ] Implement `convert_to_assets(shares: i128) -> i128`.
-  - [ ] Ensure math handles division by zero (initial deposit).
+  - [ ] Ensure rounding favors the vault (security best practice).
 
-### Issue #SC-3: Deposit & Withdraw
+### Issue #SC-6: Deposit Function Implementation
 **Priority:** Critical
-**Status:** ❌ PENDING
-**Description:** The primary user entry points.
+**Labels:** `smart-contract`, `feature`
+**Description:** The primary entry point for users to fund the vault.
 - **Tasks:**
   - [ ] Implement `deposit(env, from: Address, amount: i128)`.
-    - Transfer asset from user to contract.
-    - Mint shares to user.
+  - [ ] Transfer token from user to contract.
+  - [ ] Mint shares to user balance.
+  - [ ] Emit `Deposit` event.
+
+### Issue #SC-7: Withdraw Function Implementation
+**Priority:** Critical
+**Labels:** `smart-contract`, `feature`
+**Description:** The primary exit point for users.
+- **Tasks:**
   - [ ] Implement `withdraw(env, from: Address, shares: i128)`.
-    - Burn shares.
-    - Transfer assets to user.
-  - [ ] Emit `Deposit` and `Withdraw` events.
+  - [ ] Burn shares from user balance.
+  - [ ] Transfer underlying token to user.
+  - [ ] Emit `Withdraw` event.
+
+### Issue #SC-8: Emergency Pause Mechanism
+**Priority:** Medium
+**Labels:** `smart-contract`, `security`
+**Description:** A circuit breaker for the admin to stop deposits/withdrawals.
+- **Tasks:**
+  - [ ] Add `Paused` state to `DataKey`.
+  - [ ] Implement `set_paused(env, state: bool)`.
+  - [ ] Add `assert_not_paused` check to deposit/withdraw.
 
 ---
 
-## ⚙️ Strategy Management
+## ⚙️ Module 2: Strategy Management (Issues SC-9 to SC-15)
 
-### Issue #SC-4: Strategy Interface (Trait)
+### Issue #SC-9: Strategy Trait Definition
 **Priority:** High
-**Status:** ❌ PENDING
-**Description:** Define the standard trait that all strategy adapters must implement.
+**Labels:** `smart-contract`, `architecture`
+**Description:** Define the interface for external strategy contracts.
 - **Tasks:**
-  - [ ] Define `StrategyTrait`:
-    - `deposit(amount: i128)`
-    - `withdraw(amount: i128)`
-    - `balance() -> i128`
-    - `harvest()`
+  - [ ] Define `StrategyTrait` with `deposit`, `withdraw`, `balance`.
 
-### Issue #SC-5: Rebalancing Logic
-**Priority:** High
-**Status:** ❌ PENDING
-**Description:** Allow the AI Oracle/Admin to move funds between strategies.
+### Issue #SC-10: Strategy Registry Storage
+**Priority:** Medium
+**Labels:** `smart-contract`, `storage`
+**Description:** Store the list of active strategies.
 - **Tasks:**
-  - [ ] Implement `add_strategy(address: Address)`.
-  - [ ] Implement `rebalance(env, allocations: Map<Address, i128>)`.
-  - [ ] Restrict `rebalance` to Admin/Oracle only.
-  - [ ] Iterate through strategies to withdraw/deposit based on new allocation.
+  - [ ] Define `Strategies` storage key (Vec<Address>).
+  - [ ] Implement `add_strategy` function (Admin only).
+
+### Issue #SC-11: Rebalance Logic (Calculation)
+**Priority:** High
+**Labels:** `smart-contract`, `logic`
+**Description:** Logic to determine how much to move.
+- **Tasks:**
+  - [ ] Implement `calc_rebalance_delta(current, target)`.
+
+### Issue #SC-12: Rebalance Execution
+**Priority:** High
+**Labels:** `smart-contract`, `feature`
+**Description:** Execute the movement of funds between strategies.
+- **Tasks:**
+  - [ ] Implement `rebalance(env, allocations)`.
+  - [ ] Restrict to Admin/Oracle.
+
+### Issue #SC-13: Harvest Yield Function
+**Priority:** Medium
+**Labels:** `smart-contract`, `yield`
+**Description:** Collect rewards from strategies.
+- **Tasks:**
+  - [ ] Implement `harvest(env)`.
+  - [ ] Distribute yield to vault (increasing share price).
+
+### Issue #SC-14: Access Control Modifiers
+**Priority:** High
+**Labels:** `smart-contract`, `security`
+**Description:** Ensure only admin can call sensitive functions.
+- **Tasks:**
+  - [ ] Implement `require_admin` check.
+  - [ ] Apply to all config functions.
+
+### Issue #SC-15: Fee Management
+**Priority:** Low
+**Labels:** `smart-contract`, `economics`
+**Description:** Implement performance/management fees.
+- **Tasks:**
+  - [ ] Implement `take_fees` function.
+  - [ ] Send fee percentage to treasury.
 
 ---
 
-## 🧪 Testing
+## 🧪 Module 3: Testing & Verification (Issues SC-16 to SC-18)
 
-### Issue #SC-6: Vault Unit Tests
+### Issue #SC-16: Core Unit Tests
 **Priority:** High
-**Status:** ❌ PENDING
-**Description:** Verify vault math and access control.
+**Labels:** `testing`, `rust`
+**Description:** Verify basic vault mechanics.
 - **Tasks:**
   - [ ] Test initialization.
-  - [ ] Test deposit/withdraw exchange rate (ensure no precision loss).
-  - [ ] Test unauthorized rebalance (should fail).
-  - [ ] Mock a strategy contract for integration testing.
+  - [ ] Test simple deposit/withdraw flow.
+
+### Issue #SC-17: Integration Tests (Mock Strategy)
+**Priority:** Medium
+**Labels:** `testing`, `integration`
+**Description:** Test interaction with external contracts.
+- **Tasks:**
+  - [ ] Create `MockStrategy` contract.
+  - [ ] Test rebalancing into mock strategy.
+
+### Issue #SC-18: Fuzz Testing
+**Priority:** Low
+**Labels:** `testing`, `security`
+**Description:** Property-based testing for math safety.
+- **Tasks:**
+  - [ ] Fuzz test share conversion for overflows.
