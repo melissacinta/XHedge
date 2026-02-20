@@ -107,3 +107,62 @@ This document tracks the detailed development tasks for the Soroban smart contra
 
 - **Tasks:**
   - [ ] Define `StrategyTrait` with `deposit`, `withdraw`, `balance`.
+
+### Issue #SC-10: Strategy Registry Storage
+
+**Priority:** Medium
+**Labels:** `smart-contract`, `storage`
+**Description:** Store the list of active strategies.
+
+- **Tasks:**
+  - [ ] Define `Strategies` storage key (Vec<Address>).
+  - [ ] Implement `add_strategy` function (Admin only).
+
+### Issue #SC-11: Rebalance Logic (Calculation)
+
+**Priority:** High
+**Labels:** `smart-contract`, `logic`
+**Description:** Logic to determine how much to move.
+
+- **Tasks:**
+  - [ ] Implement `calc_rebalance_delta(current, target)`.
+
+### Issue #SC-12: Rebalance Execution
+
+**Priority:** High
+**Labels:** `smart-contract`, `feature`
+**Description:** Execute the movement of funds between strategies.
+
+- **Tasks:**
+  - [ ] Implement `rebalance(env, allocations)`.
+  - [ ] Restrict to Admin/Oracle.
+
+### Issue #SC-13: Harvest Yield Function
+
+**Priority:** Medium
+**Labels:** `smart-contract`, `yield`
+**Description:** Collect rewards from strategies.
+
+- **Tasks:**
+  - [ ] Implement `harvest(env)`.
+  - [ ] Distribute yield to vault (increasing share price).
+
+### Issue #SC-14: Access Control Modifiers
+
+**Priority:** High
+**Labels:** `smart-contract`, `security`
+**Description:** Ensure only admin can call sensitive functions.
+
+- **Tasks:**
+  - [ ] Implement `require_admin` check.
+  - [ ] Apply to all config functions.
+
+### Issue #SC-15: Fee Management
+
+**Priority:** Low
+**Labels:** `smart-contract`, `economics`
+**Description:** Implement performance/management fees.
+
+- **Tasks:**
+  - [ ] Implement `take_fees` function.
+  - [ ] Send fee percentage to treasury.
