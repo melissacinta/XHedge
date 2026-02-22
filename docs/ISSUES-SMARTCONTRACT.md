@@ -166,3 +166,29 @@ This document tracks the detailed development tasks for the Soroban smart contra
 - **Tasks:**
   - [x] Implement `take_fees` function.
   - [x] Send fee percentage to treasury.
+
+
+# 🧪 Module 3: Testing & Verification (Issues SC-16 to SC-18)
+
+### Issue #SC-16: Core Unit Tests
+**Priority:** High
+**Labels:** `testing`, `rust`
+**Description:** Verify basic vault mechanics.
+- **Tasks:**
+  - [ ] Test initialization.
+  - [ ] Test simple deposit/withdraw flow.
+
+### Issue #SC-17: Integration Tests (Mock Strategy)
+**Priority:** Medium
+**Labels:** `testing`, `integration`
+**Description:** Test interaction with external contracts.
+- **Tasks:**
+  - [ ] Create `MockStrategy` contract.
+  - [ ] Test rebalancing into mock strategy.
+
+### Issue #SC-18: Fuzz Testing
+**Priority:** Low
+**Labels:** `testing`, `security`
+**Description:** Property-based testing for math safety.
+- **Tasks:**
+  - [ ] Fuzz test share conversion for overflows.
