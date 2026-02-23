@@ -1,0 +1,68 @@
+name: Protocol Liaison (XHedge Reviewer)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  review:
+    name: XHedge Protocol Review
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node & Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Review Protocol (SmartContract & Frontend)
+        id: protocol_review
+        continue-on-error: true
+        run: |
+          echo "Auditing Smart Contracts..."
+          cd smartcontract && cargo test --all && cargo build --target wasm32-unknown-unknown --release
+          cd ..
+          echo "Auditing Frontend Dashboard..."
+          cd frontend && npm install && npm run build
+
+      - name: ❌ Handle Review Failure
+        if: steps.protocol_review.outcome == 'failure'
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body "### ❌ XHedge Protocol Review Failed
+          
+          The Protocol Liaison detected an issue in either the Smart Contract logic or the Frontend build.
+          
+          **Required Action:**
+          - Inspect the build logs for specific errors.
+          - Ensure both sub-projects compile successfully.
+          - Push a fix to re-trigger the automated review.
+          
+          *Merging is restricted until the protocol aligns.*"
+          exit 1
+
+      - name: ✅ Handle Review Success
+        if: steps.protocol_review.outcome == 'success'
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body "### ✅ XHedge Protocol Review Passed
+          
+          The Protocol Liaison has verified the structural and logic integrity of both the Contracts and the Dashboard.
+          
+          **Status:** Ready for Integration.
+          **Action:** Automatically merging into \`main\`...
+          
+          *Project maintained by @bbkenny.*"
+          
+          gh pr merge ${{ github.event.pull_request.number }} --merge --auto
