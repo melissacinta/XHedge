@@ -16,6 +16,7 @@ pub enum Error {
     NegativeAmount = 3,
     Unauthorized = 4,
     NoStrategies = 5,
+    ContractPaused = 6,
 }
 
 // ─────────────────────────────────────────────
@@ -34,6 +35,7 @@ pub enum DataKey {
     FeePercentage,
     Token,
     Balance(Address),
+    Paused,
 }
 
 // ─────────────────────────────────────────────
@@ -116,6 +118,7 @@ impl VolatilityShield {
 
     // ── Deposit ───────────────────────────────
     pub fn deposit(env: Env, from: Address, amount: i128) {
+        Self::assert_not_paused(&env);
         if amount <= 0 {
             panic!("deposit amount must be positive");
         }
@@ -151,6 +154,7 @@ impl VolatilityShield {
 
     // ── Withdraw ──────────────────────────────
     pub fn withdraw(env: Env, from: Address, shares: i128) {
+        Self::assert_not_paused(&env);
         if shares <= 0 {
             panic!("shares to withdraw must be positive");
         }
@@ -419,6 +423,32 @@ impl VolatilityShield {
             admin.require_auth();
         } else {
             oracle.require_auth();
+        }
+    }
+
+    // ── Emergency Pause ──────────────────────────
+    pub fn set_paused(env: Env, state: bool) {
+        let admin = Self::read_admin(&env);
+        admin.require_auth();
+        env.storage().instance().set(&DataKey::Paused, &state);
+        env.events().publish((symbol_short!("paused"),), state);
+    }
+
+    pub fn is_paused(env: Env) -> bool {
+        env.storage()
+            .instance()
+            .get(&DataKey::Paused)
+            .unwrap_or(false)
+    }
+
+    fn assert_not_paused(env: &Env) {
+        if env
+            .storage()
+            .instance()
+            .get(&DataKey::Paused)
+            .unwrap_or(false)
+        {
+            panic!("ContractPaused");
         }
     }
 }
