@@ -3,17 +3,21 @@
 import { VaultOverviewCard } from "@/components/vault-overview-card";
 import { Shield, ArrowUpFromLine, ArrowDownToLine } from "lucide-react";
 import Link from "next/link";
+import { WalletButton } from "./components/WalletButton";
 
 export default function Home() {
   return (
     <div className="min-h-screen p-8">
       <div className="max-w-6xl mx-auto space-y-8">
-        <div className="flex items-center gap-3">
-          <Shield className="w-10 h-10 text-primary" />
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">XHedge</h1>
-            <p className="text-muted-foreground">Volatility Shield for Weak Currencies</p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Shield className="w-10 h-10 text-primary" />
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">XHedge</h1>
+              <p className="text-muted-foreground">Volatility Shield for Weak Currencies</p>
+            </div>
           </div>
+          <WalletButton />
         </div>
 
         <VaultOverviewCard />
