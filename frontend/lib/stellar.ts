@@ -8,7 +8,6 @@ import {
   xdr,
   Contract,
   rpc,
-  SorobanDataBuilder
 } from "@stellar/stellar-sdk";
 
 export enum NetworkType {
@@ -213,18 +212,14 @@ export async function simulateAndAssembleTransaction(
 
     const transaction = TransactionBuilder.fromXDR(xdrString, passphrase);
     
-    // @ts-ignore
     const simulated = await server.simulateTransaction(transaction);
     
-    // @ts-ignore
-    if (simulated.error) {
-      // @ts-ignore
-      return { result: null, error: simulated.error };
+    if (!("error" in simulated)) {
+      const assembled = rpc.assembleTransaction(transaction, simulated);
+      return { result: assembled.build().toXDR(), error: null };
     }
 
-    // @ts-ignore
-    const assembled = await server.assembleTransaction(transaction);
-    return { result: assembled.toXDR(), error: null };
+    return { result: null, error: "Simulation failed" };
   } catch (error) {
     return { 
       result: null, 
@@ -254,8 +249,7 @@ export async function submitTransaction(
     
     const response = await server.sendTransaction(transaction);
     
-    // @ts-ignore
-    if (response.status === "PENDING" || response.status === "SUCCESS") {
+    if (response.status === "PENDING" || response.status === "DUPLICATE") {
       return { hash: response.hash, error: null };
     }
     
