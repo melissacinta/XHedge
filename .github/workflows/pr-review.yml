@@ -55,9 +55,15 @@ jobs:
           The Protocol Liaison detected an issue in either the Smart Contract logic or the Frontend build.
           
           **Required Action:**
-          - Inspect the build logs for specific errors.
-          - Ensure both sub-projects compile successfully.
-          - Push a fix to re-trigger the automated review.
+          1. **Inspect logs**: Review the build logs for specific errors.
+          2. **Logical Alignment**: Ensure both sub-projects compile successfully.
+          3. **Stay in Sync**: Ensure your local environment is synchronized with the upstream project. Run:
+             \`\`\`bash
+             git fetch origin
+             git pull origin main
+             \`\`\`
+          4. Sync your fork on GitHub and pull the latest changes to your local branch.
+          5. Push a fix to re-trigger the automated review.
           
           *Merging is restricted until the protocol aligns.*"
           exit 1
