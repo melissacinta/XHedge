@@ -7,7 +7,6 @@ import Link from "next/link";
 import { WalletButton } from "./components/WalletButton";
 import { AiInsightStream } from "./components/AiInsightStream";
 import { TransactionList } from "@/components/transaction-list";
-import { useState, useEffect } from "react";
 
 interface Slice {
   name: string;
