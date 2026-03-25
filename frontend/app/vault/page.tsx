@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { ArrowUpFromLine, ArrowDownToLine, Loader2, FileText, Shield } from "lucide-react";
 import { useWallet } from "@/hooks/use-wallet";
-import { useNetwork, NetworkType } from "@/app/context/NetworkContext";
+import { useNetwork } from "@/app/context/NetworkContext";
 import { buildDepositXdr, buildWithdrawXdr, simulateAndAssembleTransaction, submitTransaction, fetchVaultData, VaultMetrics, getNetworkPassphrase, estimateTransactionFee } from "@/lib/stellar";
 import VaultAPYChart from "@/components/VaultAPYChart";
 import TimeframeFilter, { Timeframe } from "@/components/TimeframeFilter";
@@ -34,10 +34,6 @@ export default function VaultPage() {
   const [estimatedFee, setEstimatedFee] = useState<string | null>(null);
   const [estimatingFee, setEstimatingFee] = useState(false);
   const [chartLoading, setChartLoading] = useState(false);
-  const [status, setStatus] = useState<{ type: "success" | "error" | null; message: string }>({
-    type: null,
-    message: "",
-  });
   const [metrics, setMetrics] = useState<VaultMetrics | null>(null);
   const [selectedTimeframe, setSelectedTimeframe] = useState<Timeframe>('1M');
   const [chartData, setChartData] = useState<DataPoint[]>([]);
@@ -95,12 +91,8 @@ export default function VaultPage() {
         network
       );
       setMetrics(data);
-      setStatus({ type: null, message: "" });
     } catch (error) {
-      setStatus({
-        type: "error",
-        message: error instanceof Error ? error.message : "Failed to load vault data",
-      });
+      toast.error(error instanceof Error ? error.message : "Failed to load vault data");
     } finally {
       setLoading(false);
     }
@@ -145,7 +137,7 @@ export default function VaultPage() {
 
   const handleDeposit = useCallback(async () => {
     if (!connected || !address || !amount || parseFloat(amount) <= 0) {
-      setStatus({ type: "error", message: "Please enter a valid amount" });
+      toast.error("Please enter a valid amount");
       return;
     }
 
@@ -160,6 +152,7 @@ export default function VaultPage() {
     setSigningErrorMessage("");
     setSigningStep("preparing");
 
+    const toastId = toast.loading("Processing deposit…");
     try {
       const passphrase = getNetworkPassphrase(network);
 
@@ -193,6 +186,11 @@ export default function VaultPage() {
         throw new Error(submitError || "Failed to submit transaction");
       }
 
+      toast.success(`Deposit successful! Tx: ${hash.slice(0, 8)}…`, { id: toastId });
+      setAmount("");
+      await loadVaultData();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Deposit failed", { id: toastId });
       setSigningStep("success");
       setStatus({ type: "success", message: `Deposit successful! Transaction: ${hash.slice(0, 8)}...` });
       setAmount("");
@@ -212,13 +210,13 @@ export default function VaultPage() {
 
   const handleWithdraw = useCallback(async () => {
     if (!connected || !address || !amount || parseFloat(amount) <= 0) {
-      setStatus({ type: "error", message: "Please enter a valid amount" });
+      toast.error("Please enter a valid amount");
       return;
     }
 
     const withdrawAmount = parseFloat(amount);
     if (withdrawAmount > userShares) {
-      setStatus({ type: "error", message: `Insufficient balance. You have ${userShares.toFixed(2)} shares.` });
+      toast.error(`Insufficient balance. You have ${userShares.toFixed(2)} shares.`);
       return;
     }
 
@@ -227,6 +225,7 @@ export default function VaultPage() {
     setSigningErrorMessage("");
     setSigningStep("preparing");
 
+    const toastId = toast.loading("Processing withdrawal…");
     try {
       const passphrase = getNetworkPassphrase(network);
 
@@ -260,6 +259,11 @@ export default function VaultPage() {
         throw new Error(submitError || "Failed to submit transaction");
       }
 
+      toast.success(`Withdrawal successful! Tx: ${hash.slice(0, 8)}…`, { id: toastId });
+      setAmount("");
+      await loadVaultData();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Withdrawal failed", { id: toastId });
       setSigningStep("success");
       setStatus({ type: "success", message: `Withdraw successful! Transaction: ${hash.slice(0, 8)}...` });
       setAmount("");
@@ -464,17 +468,6 @@ export default function VaultPage() {
             </div>
           )}
 
-          {status.type && (
-            <div
-              className={`p-4 rounded-lg ${
-                status.type === "success"
-                  ? "bg-green-500/10 text-green-500"
-                  : "bg-red-500/10 text-red-500"
-              }`}
-            >
-              {status.message}
-            </div>
-          )}
         </div>
       </div>
 

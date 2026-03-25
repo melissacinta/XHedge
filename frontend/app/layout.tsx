@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
 import { DashboardLayout } from "@/components/dashboard-layout";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export const metadata: Metadata = {
   title: "XHedge - Volatility Shield",
@@ -17,7 +18,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body>
         <Providers>
-          <DashboardLayout>{children}</DashboardLayout>
+          <ErrorBoundary>
+            <DashboardLayout>{children}</DashboardLayout>
+          </ErrorBoundary>
         </Providers>
       </body>
     </html>
